@@ -13,6 +13,8 @@ roslaunch task_1 task1_2.launch
 ``` 
 2. Run your python script in a separate terminal to start detecting and publishing the ArUco details.
 ```
+source ~/catkin_ws/devel/setup.bash
+chmod +x marker_detection.py
 rosrun task_1 marker_detection.py 
 ```
 *Note: To avoid manually typing the rosrun command for every iteration, you can start the rosnode in the launch file itself, to do that add the following lines in the task_1.2.launch file in the launch folder. Make sure you add the line before the </launch> line.
