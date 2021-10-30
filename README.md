@@ -23,8 +23,10 @@ Add below line
 <node name="marker_detection" type="marker_detection.py" pkg="task_1" />
 ```
 
-
-
+3. Rostopic
+```
+rostopic echo /marker_info
+```
 ## Roadmap
 
 - Create a rosnode named marker_detection in a python script, which will detect a moving ArUco marker from the video feed of camera and will publish the id, position and orientation of the marker on a rostopic /marker_info
