@@ -13,6 +13,7 @@ This node publishes and subsribes the following topics:
 	Subsriptions					Publications
 	/camera/camera/image_raw			/marker_info
 '''
+from aruco_library import detect_ArUco, Calculate_orientation_in_degree
 from sensor_msgs.msg import Image
 from task_1.msg import Marker
 from cv_bridge import CvBridge, CvBridgeError
@@ -44,19 +45,39 @@ class image_proc():
 		
 		self.marker_msg=Marker()  # This will contain the message structure of message type task_1/Marker
 
+		self.rate = rospy.Rate(10) # The rate to publish message
+
+	def get_data(self, d):
+		for iD in d:
+			(topLeft, topRight, bottomRight, bottomLeft) = d[iD][0].astype(int)
+			c = [np.float64((topLeft[0] + bottomRight[0]) / 2),np.float64((topLeft[1] + bottomRight[1]) / 2)]
+			mid_point = [np.float64((topRight[0]+topLeft[0])/2),np.float64((topRight[1]+topLeft[1])/2)]
+			self.marker_msg.id = np.int8(iD)
+			self.marker_msg.x = c[0]
+			self.marker_msg.y = c[1]
+		for k,v in Calculate_orientation_in_degree(d).items():
+			self.marker_msg.yaw = np.float64(v)
+
 
 	# Callback function of amera topic
 	def image_callback(self, data):
 	# Note: Do not make this function lenghty, do all the processing outside this callback function
 		try:
 			self.img = self.bridge.imgmsg_to_cv2(data, "bgr8") # Converting the image to OpenCV standard image
+			res = detect_ArUco(self.img)
+			self.get_data(res)
+			self.publish_data()
+
 		except CvBridgeError as e:
 			print(e)
 			return
 			
 	def publish_data(self):
 		self.marker_pub.publish(self.marker_msg)
+		self.rate.sleep()
+
 
 if __name__ == '__main__':
     image_proc_obj = image_proc()
     rospy.spin()
+
