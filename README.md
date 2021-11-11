@@ -1,11 +1,15 @@
-# Strawberry_Stacker
-Task 2.1
-Objective 1:
+
+# Task 2.1
+
+A brief description of Task 2.1
+
+
+## Roadmap
+
+- Functions
 ```class Modes:
     def __init__(self):
         pass
-
-# Calling the rosservices
 
     # Calling to /mavros/cmd/arming to arm the drone and print fail message on failure
     def setArm(self):
@@ -26,7 +30,14 @@ Objective 1:
         # Call /mavros/mission/push to push the waypoints
         # and print fail message on failure
 ```
-Objective 2:
-```
-installation packages
-```
+
+- Installation
+
+
+## Support
+
+For support, email fake@fake.com or join our Slack channel.
+
+![[Walk through](https://www.youtube.com/watch?v=E91ucxmuY10&t=2s)]
+![[Installation](https://www.youtube.com/watch?v=nfrm25oHGjQ)]
+![[Expected Output](https://www.youtube.com/watch?v=76hMOWSKQUU)]
