@@ -34,9 +34,7 @@ A brief description of Task 2.1
 - Installation
 
 
-## Support
-
-For support, email fake@fake.com or join our Slack channel.
+## Resources
 
 ![[Walk through](https://www.youtube.com/watch?v=E91ucxmuY10&t=2s)]
 ![[Installation](https://www.youtube.com/watch?v=nfrm25oHGjQ)]
