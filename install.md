@@ -80,7 +80,7 @@ python3-catkin-tools \
 python3-osrf-pycommon \
 python3-rosinstall-generator \
 python3-rospkg \
-&& mkdir -p /catkin_ws/src \
+&& mkdir -p ~/catkin_ws/src \
 && cd -/catkin_ws \
 && catkin init \
 && wstool init src \
