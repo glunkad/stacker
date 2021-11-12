@@ -1,4 +1,4 @@
-sudo apt update
+```sudo apt update
 && sudo apt upgrade - y
 && apt install -y \
 curl \
@@ -105,3 +105,4 @@ modermanager
 && pip install user
 px4 tools
 pymavlink
+```
