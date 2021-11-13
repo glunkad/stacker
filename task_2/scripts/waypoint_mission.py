@@ -40,7 +40,6 @@ class Modes:
 
    
     def auto_set_mode(self):
-
         # Call /mavros/set_mode to set the mode the drone to AUTO.MISSION
         # and print fail message on failure
     
