@@ -92,7 +92,8 @@ def main():
     wayp0 = wpMissionCnt()
     wayp1 = wpMissionCnt()
     # Add more waypoints here
-
+    wayp2 = wpMissionCnt()
+    wayp3 = wpMissionCnt()
     
     wps = [] #List to story waypoints
     
@@ -100,6 +101,12 @@ def main():
     wps.append(w)
 
     w = wayp1.setWaypoints(3,16,False,True,0.0,0.0,0.0,float('nan'),19.134617,72.911886,10)
+    wps.append(w)
+
+    w = wayp2.setWaypoints(3,22,True,True,0.0,0.0,0.0,float('nan'),19.134641,72.911706,10)
+    wps.append(w)
+
+    w = wayp3.setWaypoints(3,16,False,True,0.0,0.0,0.0,float('nan'),19.134617,72.911886,10)
     wps.append(w)
 
     print (wps)
