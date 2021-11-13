@@ -103,10 +103,10 @@ def main():
     w = wayp1.setWaypoints(3,16,False,True,0.0,0.0,0.0,float('nan'),19.134617,72.911886,10)
     wps.append(w)
 
-    w = wayp2.setWaypoints(3,22,True,True,0.0,0.0,0.0,float('nan'),19.134641,72.911706,10)
+    w = wayp2.setWaypoints(3,16,True,True,0.0,0.0,0.0,float('nan'),19.134434,72.911817,10)
     wps.append(w)
 
-    w = wayp3.setWaypoints(3,16,False,True,0.0,0.0,0.0,float('nan'),19.134617,72.911886,10)
+    w = wayp3.setWaypoints(3,21,False,True,0.0,0.0,0.0,float('nan'),19.134423,72.911763,10)
     wps.append(w)
 
     print (wps)
