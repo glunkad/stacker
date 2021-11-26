@@ -7,3 +7,4 @@
 
 [strawberry stacker](https://github.com/erts-RnD/strawberry_stacker)
 
+[Reference](https://akshayk07.weebly.com/offboard-control-of-pixhawk.html)
