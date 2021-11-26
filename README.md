@@ -1,127 +1,142 @@
 #!/usr/bin/env python3
-# ROS python API
-import rospy
 
-# 3D point & Stamped Pose msgs
-from geometry_msgs.msg import Point, PoseStamped
-# import all mavros messages and services
+
+'''
+This is a boiler plate script that contains hint about different services that are to be used
+to complete the task.
+Use this code snippet in your code or you can also continue adding your code in the same file
+
+
+This python file runs a ROS-node of name offboard_control which controls the drone in offboard mode. 
+See the documentation for offboard mode in px4 here() to understand more about offboard mode 
+This node publishes and subsribes the following topics:
+
+	 Services to be called                   Publications                                          Subscriptions				
+	/mavros/cmd/arming                       /mavros/setpoint_position/local                       /mavros/state
+    /mavros/set_mode                         /mavros/setpoint_velocity/cmd_vel                     /mavros/local_position/pose   
+         
+    
+'''
+
+import rospy
+from geometry_msgs.msg import *
 from mavros_msgs.msg import *
 from mavros_msgs.srv import *
 
 
-class Modes:
+class offboard_control:
+
+
     def __init__(self):
+        # Initialise rosnode
+        rospy.init_node('offboard_control', anonymous=True)
+
+
+    
+    def setArm(self):
+        # Calling to /mavros/cmd/arming to arm the drone and print fail message on failure
+        rospy.wait_for_service('mavros/cmd/arming')  # Waiting untill the service starts 
+        try:
+            armService = rospy.ServiceProxy('mavros/cmd/arming', mavros_msgs.srv.CommandBool) # Creating a proxy service for the rosservice named /mavros/cmd/arming for arming the drone 
+            armService(True)
+        except rospy.ServiceException as e:
+            print ("Service arming call failed: %s"%e)
+
+        # Similarly delacre other service proxies 
+
+   
+    def offboard_set_mode(self):
         pass
 
-    def setArm(self):
-        rospy.wait_for_service('mavros/cmd/arming')
-        try:
-            armService = rospy.ServiceProxy('mavros/cmd/arming', mavros_msgs.srv.CommandBool)
-            armService(True)
-        except rospy.ServiceException, e:
-            print "Service arming call failed: %s"%e
-
-    def auto_set_mode(self):
-        rospy.wait_for_service('mavros/set_mode')
-        try:
-            # setModeService = rospy.ServiceProxy('mavros/set_mode', mavros_msgs.srv.set_mode.request.custom_mode)
-            setModeService = rospy.ServiceProxy('mavros/set_mode', mavros_msgs.srv.SetMode)
-            setModeService(custom_mode="AUTO.MISSION")
-        except rospy.ServiceException, e:
-            print "Service takeoff call failed: %s"%e
-
-    def wpPush(self,index,wps):
-        rospy.wait_for_service('mavros/mission/push')
-        try:
-            wpPushService = rospy.ServiceProxy('mavros/mission/push', WaypointPush,persistent=True)
-            wpPushService(start_index=0,waypoints=wps)#start_index = the index at which we want the mission to start
-            print "Waypoint Pushed"
-        except rospy.ServiceException, e:
-            print "Service takeoff call failed: %s"%e
-    def wpPull(self,wps):
-        rospy.wait_for_service('mavros/mission/pull')
-        try:
-            wpPullService = rospy.ServiceProxy('mavros/mission/pull', WaypointPull,persistent=True)
-            print wpPullService().wp_received
-
-            print "Waypoint Pulled"
-        except rospy.ServiceException, e:
-            print "Service Puling call failed: %s"%e
-
+        # Call /mavros/set_mode to set the mode the drone to OFFBOARD
+        # and print fail message on failure
+    
+   
 class stateMoniter:
     def __init__(self):
         self.state = State()
         # Instantiate a setpoints message
-        self.sp = PositionTarget()
 
-        # set the flag to use position setpoints and yaw angle
-        self.sp.type_mask = int('010111111000', 2)
         
     def stateCb(self, msg):
+        # Callback function for topic /mavros/state
         self.state = msg
 
-class wpMissionCnt:
-
-    def __init__(self):
-        self.wp =Waypoint()
-        
-    def setWaypoints(self,frame,command,is_current,autocontinue,param1,param2,param3,param4,x_lat,y_long,z_alt):
-        self.wp.frame =frame #  FRAME_GLOBAL_REL_ALT = 3 for more visit http://docs.ros.org/api/mavros_msgs/html/msg/Waypoint.html
-        self.wp.command = command '''VTOL TAKEOFF = 84,NAV_WAYPOINT = 16, TAKE_OFF=22 for checking out other parameters go to https://github.com/mavlink/mavros/blob/master/mavros_msgs/msg/CommandCode.msg'''
-        self.wp.is_current= is_current
-        self.wp.autocontinue = autocontinue # enable taking and following upcoming waypoints automatically 
-        self.wp.param1=param1 # no idea what these are for but the script will work so go ahead
-        self.wp.param2=param2
-        self.wp.param3=param3
-        self.wp.param4=param4
-        self.wp.x_lat= x_lat 
-        self.wp.y_long=y_long
-        self.wp.z_alt= z_alt #relative altitude.
-
-        return self.wp
+    # Create more callback functions for other subscribers    
 
 
 def main():
-    rospy.init_node('waypointMission', anonymous=True)
-    rate = rospy.Rate(20.0)
+
 
     stateMt = stateMoniter()
-    md = Modes()
+    ofb_ctl = offboard_control()
+
+    # Initialize publishers
+    local_pos_pub = rospy.Publisher('mavros/setpoint_position/local', PoseStamped, queue_size=10)
+    local_vel_pub = rospy.Publisher('mavros/setpoint_velocity/cmd_vel', Twist, queue_size=10)
+    # Specify the rate 
+    rate = rospy.Rate(20.0)
+
+    # Make the list of setpoints 
+    setpoints = [] #List to setpoints
+
+    # Similarly initialize other publishers 
+
+    # Create empty message containers 
+    pos =PoseStamped()
+    pos.pose.position.x = 0
+    pos.pose.position.y = 0
+    pos.pose.position.z = 0
+
+    # Set your velocity here
+    vel = Twist()
+    vel.linear.x = 0
+    vel.linear.y = 0
+    vel.linear.z = 0
     
-    wayp0 = wpMissionCnt()
-    wayp1 = wpMissionCnt()
-    wayp2 = wpMissionCnt()
-    wayp3 = wpMissionCnt()
-    
-    wps = [] #List to story waypoints
-    
-    w = wayp0.setWaypoints(3,84,True,True,0.0,0.0,0.0,float('nan'),47.397713,8.547605,50)
-    wps.append(w)
+    # Similarly add other containers 
 
-    w = wayp1.setWaypoints(3,16,False,True,0.0,0.0,0.0,float('nan'),47.398621,8.547745,50)
-    wps.append(w)
-
-    w = wayp2.setWaypoints(3,16,False,True,0.0,0.0,0.0,float('nan'),47.399151,8.545320,50)
-    wps.append(w)
-
-    print wps
-    md.wpPush(0,wps)
-
-    md.wpPull(0)
+    # Initialize subscriber 
     rospy.Subscriber("/mavros/state",State, stateMt.stateCb)
+
+    # Similarly initialize other subscribers 
+
+
+    '''
+    NOTE: To set the mode as OFFBOARD in px4, it needs atleast 100 setpoints at rate > 10 hz, so before changing the mode to OFFBOARD, send some dummy setpoints  
+    '''
+    for i in range(100):
+        local_pos_pub.publish(pos)
+        rate.sleep()
+
 
     # Arming the drone
     while not stateMt.state.armed:
-        md.setArm()
+        ofb_ctl.setArm()
         rate.sleep()
+    print("Armed!!")
+
     # Switching the state to auto mode
-    while not stateMt.state.mode=="AUTO.MISSION":
-        md.auto_set_mode()
+    while not stateMt.state.mode=="OFFBOARD":
+        ofb_ctl.offboard_set_mode()
         rate.sleep()
-        print "AUTO.MISSION"
+    print ("OFFBOARD mode activated")
 
-    # rospy.spin()
+    # Publish the setpoints 
+    while not rospy.is_shutdown():
+        '''
+        Step 1: Set the setpoint 
+        Step 2: Then wait till the drone reaches the setpoint, 
+        Step 3: Check if the drone has reached the setpoint by checking the topic /mavros/local_position/pose 
+        Step 4: Once the drone reaches the setpoint, publish the next setpoint , repeat the process until all the setpoints are done  
 
+
+        Write your algorithm here 
+        '''
+
+        local_pos_pub.publish(pos)
+        local_vel_pub.publish(vel)
+        rate.sleep()
 
 if __name__ == '__main__':
     try:
