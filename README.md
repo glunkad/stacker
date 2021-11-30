@@ -9,4 +9,3 @@
 
 [Reference](https://akshayk07.weebly.com/offboard-control-of-pixhawk.html)
 
-[Reference](https://github.com/PX4/PX4-Autopilot/tree/master/integrationtests/python_src/px4_it/mavros)
