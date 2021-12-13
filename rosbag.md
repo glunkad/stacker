@@ -1,7 +1,6 @@
 
-## Documentation
+## Check your bag file using plotjuggler. There you can see the path traced.
 
-Check your bag file using plotjuggler. There you can see the path traced.
 Verifying bag files:
 - Install a tool call plotjuggler sudo apt install ros-noetic-plotjuggler-ros
 More details here: [GitHub](https://github.com/facontidavide/PlotJuggler): The Time Series Visualization Tool that you deserve.
