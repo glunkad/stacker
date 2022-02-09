@@ -9,4 +9,5 @@ Write Python script for Detecting ArUco markers . The Resulting image must have 
 - ArUco id number in RED colour
 - Orientation of the ArUco in degrees in GREEN colour
 # Output
-https://user-images.githubusercontent.com/67200542/153280386-a556a641-518d-45ea-973a-f2701af120f7.mp4
+https://user-images.githubusercontent.com/67200542/153280616-e78831fe-1ef6-4bca-a134-f47c6c1c7d4a.mp4
+
