@@ -5,7 +5,7 @@
 ## The Background
 Strawberry harvesting on a commercial scale requires skilled labour. The harvester has to quickly scan the ripe strawberries on a plant and then deftly proceed to pick them, packing the berries in boxes happens at the same time. You can see this process in action in the two videos below:
 
-<img width="831" alt="one" src="https://user-images.githubusercontent.com/67200542/153278197-b4f82476-e71b-4ad1-8626-efd6418e4b31.mp4">
+<video width="831" alt="one" src="https://user-images.githubusercontent.com/67200542/153278197-b4f82476-e71b-4ad1-8626-efd6418e4b31.mp4">
 
 
 https://user-images.githubusercontent.com/67200542/153278324-80e90c0e-90e4-4771-a216-4d601af17dbc.mp4
