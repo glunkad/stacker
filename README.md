@@ -21,6 +21,8 @@ A sound approach is repurposing existing tools and implements if possible.
 Perhaps sprayer arms, or harvester heads could be repurposed but they are really not designed for the job and unsuitable for load bearing.
 We are seeing that multicopters are increasingly being used on farms to perform spraying operations, some organic farms even employ them to spray/deposit beneficial bugs 17!
 
+<img width="476" alt="Capture" src="https://user-images.githubusercontent.com/67200542/153277739-f76bcbeb-cd86-427d-b05f-98f51dac0d2b.PNG">
+
 ## Documentation
 
 [Ros Commands](https://subscription.packtpub.com/book/hardware_and_creative/9781782175193/1/ch01lvl1sec15/ros-commands-summary)
