@@ -5,14 +5,8 @@
 ## The Background
 Strawberry harvesting on a commercial scale requires skilled labour. The harvester has to quickly scan the ripe strawberries on a plant and then deftly proceed to pick them, packing the berries in boxes happens at the same time. You can see this process in action in the two videos below:
 
-<div class="row">
-  <div class="column">
-    https://user-images.githubusercontent.com/67200542/153278197-b4f82476-e71b-4ad1-8626-efd6418e4b31.mp4
-  </div>
-  <div class="column">
-    https://user-images.githubusercontent.com/67200542/153278324-80e90c0e-90e4-4771-a216-4d601af17dbc.mp4
-  </div>
-</div>
+https://user-images.githubusercontent.com/67200542/153278197-b4f82476-e71b-4ad1-8626-efd6418e4b31.mp4
+https://user-images.githubusercontent.com/67200542/153278324-80e90c0e-90e4-4771-a216-4d601af17dbc.mp4
 
 But did you notice that while the workers are performing the skilled work of picking , since they are paid by the box, they also have to pick the box and run back to a truck to deposit it. This is not good for the overall efficiency of the farm operation and is also toil for the workers, surely there could be a better way.
 
