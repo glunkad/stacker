@@ -11,7 +11,7 @@ Scalability of the cart is an issue because you need one for each row, roughly s
 Storage and maintenance both during and apart from the harvest season is an issue, even if they are normal non-smart carts.
 Below is a view of how a typical strawberry operation looks like, consider how many carts this will necessitate, even simple low-tech carts soon become a cost and logistics challenge.
 
-<img width="516" alt="one" src="https://user-images.githubusercontent.com/67200542/153268488-9dfb0da4-ec18-4668-913e-c0604adbb6a8.PNG">
+<img width="831" alt="one" src="https://user-images.githubusercontent.com/67200542/153268488-9dfb0da4-ec18-4668-913e-c0604adbb6a8.PNG">
 
 ## Designing our intervention
 Can we improve upon the selected approach?
