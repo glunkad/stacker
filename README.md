@@ -19,7 +19,7 @@ Can we improve upon the selected approach?
 Two clear areas are the capital outlay and the running costs. For instance, the huge cart cost a whopping $125,000 back in 2004 and incurred about $200 a day in operations and maintenance costs.
 A sound approach is repurposing existing tools and implements if possible.
 Perhaps sprayer arms, or harvester heads could be repurposed but they are really not designed for the job and unsuitable for load bearing.
-We are seeing that multicopters are increasingly being used on farms to perform spraying operations, some organic farms even employ them to spray/deposit beneficial bugs 17!
+We are seeing that multicopters are increasingly being used on farms to perform spraying operations, some organic farms even employ them to spray/deposit beneficial bugs!
 
 <img width="476" alt="Capture" src="https://user-images.githubusercontent.com/67200542/153277739-f76bcbeb-cd86-427d-b05f-98f51dac0d2b.PNG">
 
