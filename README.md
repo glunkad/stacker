@@ -31,7 +31,4 @@ We are seeing that multicopters are increasingly being used on farms to perform 
 
 [Reference](https://clover.coex.tech/en/mavros.html)
 
-Task 4 
-In the single_vehicle_spawn_sdf.launch file by changing the second last line -model $(arg vehicle)_$(arg ID) to -model edrone$(arg ID) has resolved this error and this will also solve the gripper error , everything works fine and i hope this might be the final bug we are facing
-
 
