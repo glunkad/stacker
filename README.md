@@ -7,6 +7,10 @@ Strawberry harvesting on a commercial scale requires skilled labour. The harvest
 
 https://user-images.githubusercontent.com/67200542/153278197-b4f82476-e71b-4ad1-8626-efd6418e4b31.mp4
 
+https://user-images.githubusercontent.com/67200542/153278324-80e90c0e-90e4-4771-a216-4d601af17dbc.mp4
+
+
+
 
 But did you notice that while the workers are performing the skilled work of picking , since they are paid by the box, they also have to pick the box and run back to a truck to deposit it. This is not good for the overall efficiency of the farm operation and is also toil for the workers, surely there could be a better way.
 
