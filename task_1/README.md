@@ -1,4 +1,5 @@
-## PS:Write Python script for Detecting ArUco markers . The Resulting image must have ArUco markers marked as shown in Figure1. Hence the resulting image will have ArUco markers with:
+## PS
+Write Python script for Detecting ArUco markers . The Resulting image must have ArUco markers marked as shown in Figure1. Hence the resulting image will have ArUco markers with:
 - Gray dot indicating top-left
 - Green dot indicating top-right
 - Pink dot indicating bottom-right
