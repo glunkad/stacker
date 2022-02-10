@@ -5,5 +5,6 @@
 - You need to call the rosservice /mavros/cmd/arming to arm and /mavros/set_mode to set mode of the drone to mission mode
 - Then you have to call the rosservice /mavros/mission/push and /mavros/mission/pull to Request parameter from device (or internal cache) and send parameters from ROS to FCU respectively.
 ## Output
+https://user-images.githubusercontent.com/67200542/153456119-f3191691-e60a-4acf-b2d3-7d49ae972115.mp4
 ## Subtask 2
 ## Output
