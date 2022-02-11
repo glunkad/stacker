@@ -1,4 +1,4 @@
-<!-- Strawberry Stacker -->
+**Strawberry Stacker**
 ## Storyline 
 
 <img width="831" alt="one" src="https://user-images.githubusercontent.com/67200542/153248150-ad0ffde0-3107-4858-ab01-3f0d2a53cc9e.PNG">
