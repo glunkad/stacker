@@ -1,4 +1,4 @@
- ****Strawberry Stacker****
+# ********Strawberry Stacker********
 
 <img width="1026" alt="Capture" src="https://user-images.githubusercontent.com/67200542/153619157-30716715-8466-49e1-b63b-dd69f37b810c.PNG">
 
