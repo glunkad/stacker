@@ -306,15 +306,18 @@ class Drone(strawberry_stacker):
     def drone2(self):
         self.setup()
         for row_no in row_nos_lst:
-            x ,y ,z= 6.86,row_no  - 61.0, self.alt+1
-            self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
-            self.local_pos_pub.publish(self.epos)
-            self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
-            print(x,y,z)
-            self.find = 1
-            self.search()
-            self.pick_from_location()
-            self.drop_at_location()
+            row_nos_lst[self.found_count] = 0
+            print(row_no)
+            if row_no % 2 != 0 and row_no != 0:
+                x ,y ,z = 0,row_no * 4  - 60.0, self.alt+1
+                self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
+                self.local_pos_pub.publish(self.epos)
+                self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
+                print(x,y,z)
+                self.find = 1
+                self.search()
+                self.pick_from_location()
+                self.drop_at_location()
 
 
 
