@@ -68,8 +68,7 @@ class stateMoniter:
         self.grip = String()
         self.img = np.empty([])
         self.bridge = CvBridge()
-        self.row_nos_lst = []
- 
+        
     def stateCb(self, msg):
         '''Callback function for /mavros/state'''
         self.state = msg
@@ -88,14 +87,6 @@ class stateMoniter:
             self.img = self.bridge.imgmsg_to_cv2(msg, "bgr8") # Converting the image to OpenCV standard image
         except CvBridgeError as e:
             print(e)
-
-    def rowCb(self, msg):
-        ''' Callback function for /spawn_info'''
-        row_no = msg.data
-        # self.row_nos_lst.append(row_no * 4)
-        # print(self.row_nos_lst)
-        row_nos_lst.append(row_no * 4)
-        print(row_nos_lst)
 
 class Aruco:
     def detect_ArUco(self,img):
@@ -122,38 +113,23 @@ class Aruco:
         except:
             pass
 
-class Boxes:
-    """docstring for Boxes"""
-    def __init__(self):
-        super(Boxes, self).__init__()
-        self.st_mt = stateMoniter() 
-        self.box_count = 0
-        self.box_loc = list()
+class strawberry_stacker:
 
-    def row_nos(self):
-        x = self.st_mt.row_no
-        print(x)
-        while self.box_count < 30: 
-            if not x:
-                print(x)
-                self.box_loc.append(x)
-                self.box_count += 1
-            else:
-                pass
+    def box_count(self):
+        pass
 
-    def get_box_status(self,no, flag):
-        self.box_status[no] = flag
-
-    def get_box_count(self):
-        self.count += 1
-
-
-class Drone:
+    def rowCb(self, msg):
+        ''' Callback function for /spawn_info'''
+        row_no = msg.data
+        row_nos_lst.append(row_no)
+        print(row_nos_lst)
+    
+class Drone(strawberry_stacker):
     """docstring for Drone"""
-    def __init__(self, drone_no, drop_loc):
+    def __init__(self, drone_no , drop_loc):
         super(Drone, self).__init__()
         self.rate = rospy.Rate(20.0)
-        self.off,self.alt = 0.25,2.5
+        self.off,self.alt = 0.25,3.0
         self.st_mt,self.pp, self.aruco = stateMoniter(),pick_n_place(), Aruco()
         self.drop_loc = drop_loc
         self.drone_no = drone_no
@@ -185,9 +161,8 @@ class Drone:
             self.pp.offboard(self.drone_no)
             self.rate.sleep()
         print("OFFBOARD mode activated {0}".format(self.drone_no))
-        print()
-        # self.row = self.st_mt.row_no
-        # print("ROW IN DRONE CLASS =>", self.st_mt.row_nos_lst)
+        print("-----Setup Completed-------")
+        print("row nos from strawberry stacker:{0}".format(row_nos_lst))
         
     def reach_point(self,px,py,pz):
         reached = False
@@ -230,7 +205,7 @@ class Drone:
 
     def search(self):
         while self.find:
-            x1,y1,z1 = self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = self.st_mt.pos.pose.position.x + 2.0 , self.st_mt.pos.pose.position.y, self.st_mt.pos.pose.position.z
+            x1,y1,z1 = self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = self.st_mt.pos.pose.position.x + 2.0 , self.st_mt.pos.pose.position.y, 2.0
             self.local_pos_pub.publish(self.epos)
             aruco_check = self.aruco.detect_ArUco(self.st_mt.img)
             if aruco_check!=0: 
@@ -313,21 +288,25 @@ class Drone:
 
     def drone1(self):
         self.setup()
-        for row_no in range(0,10):
-            x ,y ,z=  0 ,row_no * 4 , self.alt 
-            self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
-            self.local_pos_pub.publish(self.epos)
-            self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
-            print(x,y,z)
-            self.find = 1
-            self.search()
-            self.pick_from_location()
-            self.drop_at_location()
+        for row_no in row_nos_lst:
+            row_nos_lst[self.found_count] = 0
+            print(row_no)
+            if row_no % 2 == 0 and row_no != 0:
+                x ,y ,z =  0 ,row_no * 4 , self.alt 
+                self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
+                self.local_pos_pub.publish(self.epos)
+                self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
+                print(x,y,z)
+                self.find = 1
+                self.search()
+                self.pick_from_location()
+                self.drop_at_location()
+
     
     def drone2(self):
         self.setup()
-        for row_no in range(0,10):
-            x ,y ,z= 6.86,row_no * 4 - 61.0, self.alt+1
+        for row_no in row_nos_lst:
+            x ,y ,z= 6.86,row_no  - 61.0, self.alt+1
             self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
             self.local_pos_pub.publish(self.epos)
             self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
@@ -343,12 +322,10 @@ def main():
     rospy.init_node('strawberry_stacker', anonymous = True)
     
     global row_no,row_nos_lst
-    row_no = UInt8
-    row_nos_lst = []
+    row_no,row_nos_lst = UInt8(), []
 
-    rospy.Subscriber('/spawn_info', UInt8, stateMoniter().rowCb)
-    
-    b = Boxes()
+    rospy.Subscriber('/spawn_info', UInt8, strawberry_stacker().rowCb)
+
     e1,e2 = ('edrone0','edrone1')
     drop_loc1 = ([(16.31,-6.55,4.25),(16.31,-6.55,2.25),(16.31,-6.55,5.25),(0,0,5.25)],[(58.5,63.74,4.25),(58.5,63.75,2.25),(58.5,63.75,5.25), (0,0,5.25)])
     drop_loc2 = ([(16.31,-66.55,4.25),(16.31,-66.55,2.25),(16.31,-66.55,5.25),(0,0,5.25)],[(58.5,3.74,4.25),(58.5,3.75,2.25),(58.5,3.75,5.25), (0,0,5.25)])
@@ -357,11 +334,8 @@ def main():
     t1 = Thread(target = d1.drone1)
     t1.start()
     #Thread 2
-    t2 = Thread(target = d2.drone2)
-    t2.start()
-    #Thread 3
-    # ts = Thread(target = b.row_nos)
-    # ts.start()
+    # t2 = Thread(target = d2.drone2)
+    # t2.start()
     
 if __name__ == '__main__':
     start = time.time()
@@ -372,8 +346,3 @@ if __name__ == '__main__':
         pass
     print((time.time() - start) / 60)
 
-
-'''
-Blue id 2
-
-'''
