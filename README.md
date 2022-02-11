@@ -1,4 +1,7 @@
 # ****Strawberry Stacker****
+
+<img width="526" alt="Capture" src="https://user-images.githubusercontent.com/67200542/153619157-30716715-8466-49e1-b63b-dd69f37b810c.PNG">
+
 ## Storyline 
 
 <img width="831" alt="one" src="https://user-images.githubusercontent.com/67200542/153248150-ad0ffde0-3107-4858-ab01-3f0d2a53cc9e.PNG">
