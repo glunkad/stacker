@@ -1,5 +1,4 @@
-```
-sudo  apt update \
+ sudo  apt update \
   && sudo apt upgrade -y \
   && sudo apt install -y \
     curl \
@@ -88,6 +87,8 @@ sudo  apt update \
   && chmod +x ./QGroundControl.AppImage \
   && cd ~/catkin_ws/src \
   && git clone https://github.com/PX4/PX4-Autopilot.git --recursive \
+  && cd PX-Autopilot \
+  && DONT_RUN=1 make px4_sitl_default gazebo \
   && cd ~/catkin_ws \
   && catkin build \
   && pip install --user \
@@ -98,4 +99,3 @@ sudo  apt update \
    source ~/catkin_ws/src/PX4-Autopilot/Tools/setup_gazebo.bash ~/catkin_ws/src/PX4-Autopilot/ ~/catkin_ws/src/PX4-Autopilot/build/px4_sitl_default >> /dev/null 
    export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/catkin_ws/src/PX4-Autopilot 
    export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/catkin_ws/src/PX4-Autopilot/Tools/sitl_gazebo
-```
