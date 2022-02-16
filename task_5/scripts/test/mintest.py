@@ -233,9 +233,8 @@ class Drone(object):
                             y1= self.epos.pose.position.y = self.st_mt.pos.pose.position.y + 0.24
                             self.local_pos_pub.publish(self.epos)
                             self.found = 1
-                            #_C1_#
                             while not reached:
-                                if abs(y1 - self.st_mt.  pos.pose.position.y) < 0.2 and abs(z1 - self.st_mt.pos.pose.position.z) < 0.25 :
+                                if abs(self.epos.pose.position.x - self.st_mt.pos.pose.position.x) < 0.15 abs(y1 - self.st_mt.  pos.pose.position.y) < 0.2 and abs(z1 - self.st_mt.pos.pose.position.z) < 0.25 :
                                     reached = True
                                 self.rate.sleep()
                             print("landing coordinates",x1,y1,z1)
@@ -295,7 +294,6 @@ class Drone(object):
                         continue
                     self.local_pos_pub.publish(self.epos)
                     reached = False
-                    #_C2_#
                     self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
                 self.find = 0
             
