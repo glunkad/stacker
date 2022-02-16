@@ -143,7 +143,7 @@ class Drone(object):
         self.found = 0
         self.found_count = 0
         self.prev_loc = (0,0,0)
-        self.row_nos_lst = row_nos_lst
+        self.row_nos_lst = list()
 
     def setup(self):
         rospy.Subscriber(self.drone_no+'/mavros/state', State, self.st_mt.stateCb)
@@ -173,10 +173,8 @@ class Drone(object):
             print("Reached : ",(px,py,pz))
 
     def pick_from_location(self):
-        self.prev_loc = (self.st_mt.pos.pose.position.x,
-                        self.st_mt.pos.pose.position.y,
-                        3.0)
-        while self.found and self.st_mt.pos.pose.position.z < 0.5:
+        self.prev_loc = (self.st_mt.pos.pose.position.x,self.st_mt.pos.pose.position.y,3.0)
+        while self.found:
             print(self.st_mt.grip.data)
             if self.st_mt.grip.data == "True":
                 self.found_count += 1 
@@ -188,11 +186,6 @@ class Drone(object):
                 self.drop[-1] = self.prev_loc
             else:
                 self.rate.sleep()
-        else:
-            self.epos.pose.position.z -= 1
-            self.local_pos_pub.publish(self.epos)
-            self.rate.sleep()
-        # self.find = 0
         
     def drop_at_location(self):
         for i,setpoint in enumerate(self.drop):
@@ -234,7 +227,7 @@ class Drone(object):
                             self.local_pos_pub.publish(self.epos)
                             self.found = 1
                             while not reached:
-                                if abs(self.epos.pose.position.x - self.st_mt.pos.pose.position.x) < 0.15 abs(y1 - self.st_mt.  pos.pose.position.y) < 0.2 and abs(z1 - self.st_mt.pos.pose.position.z) < 0.25 :
+                                if abs(y1 - self.st_mt.  pos.pose.position.y) < 0.2 and abs(z1 - self.st_mt.pos.pose.position.z) < 0.25 :
                                     reached = True
                                 self.rate.sleep()
                             print("landing coordinates",x1,y1,z1)
@@ -303,10 +296,10 @@ class Drone(object):
         if self.drone_no == "edrone0":
             for row_no in row_nos_lst:
                 print(self.row_nos_lst)
-                row_nos_lst[self.found_count] = 0
-                print(self.drone_no," : ",row_no)
+                row_nos_lst.pop(self.found_count)
+                print("row list {0} : {1}".format(self.row_nos_lst,self.drone_no))
                 if row_no % 2 == 0 and row_no != 0:
-                    x ,y ,z =  0 ,row_no * 4 , self.alt 
+                    x ,y ,z =  0.5 ,row_no * 4 , self.alt 
                     self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
                     self.local_pos_pub.publish(self.epos)
                     self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
@@ -317,11 +310,10 @@ class Drone(object):
                     self.drop_at_location()
         elif self.drone_no == "edrone1":
             for row_no in row_nos_lst:
-                row_nos_lst[self.found_count] = 0
-                print(self.row_nos_lst)
-                print(self.drone_no,"+",row_no)
+                row_nos_lst.pop(self.found_count)
+                print("row list {0} : {1}".format(self.row_nos_lst,self.drone_no))
                 if row_no % 2 != 0 and row_no != 0:
-                    x ,y ,z = 0,row_no * 4  - 60.0, self.alt+1
+                    x ,y ,z = 1 ,row_no * 4  - 60.0, self.alt+1
                     self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
                     self.local_pos_pub.publish(self.epos)
                     self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
@@ -338,6 +330,9 @@ def main():
     
     global row_no,row_nos_lst
     row_no,row_nos_lst = UInt8(), []
+
+    global dlst 
+    dlst = []
 
     rospy.Subscriber('/spawn_info', UInt8, strawberry_stacker().rowCb)
 
