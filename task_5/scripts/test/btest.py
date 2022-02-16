@@ -10,6 +10,7 @@ from std_msgs.msg import String, UInt8
 from gazebo_ros_link_attacher.srv import Gripper
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
+from multiprocessing import Process
 from threading import Thread
 import numpy as np
  
@@ -70,6 +71,7 @@ class stateMoniter:
         self.grip = String()
         self.img = np.empty([])
         self.bridge = CvBridge()
+        self.row_no = int()
  
     def stateCb(self, msg):
         '''Callback function for /mavros/state'''
@@ -90,44 +92,65 @@ class stateMoniter:
         except CvBridgeError as e:
             print(e)
 
+    def rowCb(self, msg):
+        ''' Callback function for /spawn_info'''
+        self.row_no = msg.data
 
 class Aruco:
+ 
     def detect_ArUco(self,img):
         '''Function to detect ArUco markers in the image using ArUco library'''
-        try:
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_250)
-            parameters = aruco.DetectorParameters_create()
-            corners, ids, _ = aruco.detectMarkers(gray, aruco_dict, parameters = parameters)
-            Detected_ArUco_markers = dict(zip(ids[:,0], corners)) if ids != None else 0     
-            return Detected_ArUco_markers
-        except TypeError as e:
-            pass
-        except ValueError as e:
-            pass
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_250)
+        parameters = aruco.DetectorParameters_create()
+        corners, ids, _ = aruco.detectMarkers(gray, aruco_dict, parameters = parameters)
+        Detected_ArUco_markers = dict(zip(ids[:,0], corners)) if ids != None else 0     
+        return Detected_ArUco_markers
+ 
     def Calculate_orientation(self,Detected_ArUco_markers):
         '''Function to calculate orientation of ArUco with respective to the scale mentioned in problem statement'''
-        try:
-            for i in Detected_ArUco_markers:
-                (topLeft, topRight, bottomRight, bottomLeft) = Detected_ArUco_markers[i][0].astype(int)
-                cx = (topLeft[0] + bottomRight[0]) / 2
-                cy = (topLeft[1] + bottomRight[1]) / 2
-            return cx,cy
-        except:
-            pass
+        for i in Detected_ArUco_markers:
+            (topLeft, topRight, bottomRight, bottomLeft) = Detected_ArUco_markers[i][0].astype(int)
+            cx = (topLeft[0] + bottomRight[0]) / 2
+            cy = (topLeft[1] + bottomRight[1]) / 2
+        return cx,cy
+
+class Boxes(object):
+    """docstring for Boxes"""
+    def __init__(self):
+        super(Boxes, self).__init__()
+        self.box_loc = list()
+        self.box_status = dict() 
+        self.count = 0
+
+    def row_nos(self):
+        if self.count < 29:
+            x = stateMoniter().row_no
+            if x:
+                print(x)
+                self.box_loc.append(x)
+                self.count += 1
+            else:
+                pass
+
+    def get_box_status(self,no, flag):
+        self.box_status[no] = flag
+
+    def get_box_count(self):
+        self.count += 1
 
 
-class Drone:
+class Drone(object):
     """docstring for Drone"""
     def __init__(self, drone_no, drop_loc):
         super(Drone, self).__init__()
         self.rate = rospy.Rate(20.0)
-        self.off,self.alt = 0.25,2.5
+        self.off,self.alt = 0.25,3.0
         self.st_mt,self.pp, self.aruco = stateMoniter(),pick_n_place(), Aruco()
         self.drop_loc = drop_loc
         self.drone_no = drone_no
-        self.local_pos_pub = rospy.Publisher(self.drone_no+'/mavros/setpoint_position/local', PoseStamped, queue_size = 1)
-        self.local_vel_pub = rospy.Publisher(self.drone_no+'/mavros/setpoint_velocity/cmd_vel', Twist, queue_size=1)
+        self.local_pos_pub = rospy.Publisher(self.drone_no+'/mavros/setpoint_position/local', PoseStamped, queue_size = 10)
+        self.local_vel_pub = rospy.Publisher(self.drone_no+'/mavros/setpoint_velocity/cmd_vel', Twist, queue_size=10)
         self.epos = PoseStamped()
         self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (0,0,0)
         self.vel = Twist()
@@ -136,7 +159,7 @@ class Drone:
         self.found = 0
         self.found_count = 0
         self.prev_loc = (0,0,0)
-    
+
     def setup(self):
         rospy.Subscriber(self.drone_no+'/mavros/state', State, self.st_mt.stateCb)
         rospy.Subscriber(self.drone_no+'/mavros/local_position/pose', PoseStamped, self.st_mt.posCb)
@@ -154,7 +177,6 @@ class Drone:
             self.pp.offboard(self.drone_no)
             self.rate.sleep()
         print("OFFBOARD mode activated {0}".format(self.drone_no))
-        print("----------------x----------------------")
         
     def reach_point(self,px,py,pz):
         reached = False
@@ -166,20 +188,26 @@ class Drone:
             print("Reached : ",(px,py,pz))
 
     def pick_from_location(self):
-        self.prev_loc = (self.st_mt.pos.pose.position.x,self.st_mt.pos.pose.position.y,3.0)
-        print("pick_from_location")
-        while self.found:
+        self.prev_loc = (self.st_mt.pos.pose.position.x,
+                        self.st_mt.pos.pose.position.y,
+                        3.0)
+        while self.found and self.st_mt.pos.pose.position.z < 0.5:
+            print(self.st_mt.grip.data)
             if self.st_mt.grip.data == "True":
                 self.found_count += 1 
                 self.pp.is_grab(self.drone_no, True)
                 self.found = 0
                 print("Grabbed!!!!!")
-                self.vel.linear.x,self.vel.linear.y,self.vel.linear.z = (10,10,1)
+                self.vel.linear.x,self.vel.linear.y,self.vel.linear.z = (5,5,1)
                 self.local_vel_pub.publish(self.vel)
                 self.drop[-1] = self.prev_loc
             else:
-                print(self.st_mt.pos.pose.position.x,self.st_mt.pos.pose.position.y ,self.st_mt.pos.pose.position.x ,self.drone_no)
                 self.rate.sleep()
+        else:
+            self.epos.pose.position.z -= 1
+            self.local_pos_pub.publish(self.epos)
+            self.rate.sleep()
+        # self.find = 0
         
     def drop_at_location(self):
         for i,setpoint in enumerate(self.drop):
@@ -189,143 +217,129 @@ class Drone:
             self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = setpoint
             self.local_pos_pub.publish(self.epos)    
             self.reach_point(setpoint[0],setpoint[1],setpoint[2])
-            # if self.st_mt.pos.pose.position.z < 4.5:
-            self.pp.is_grab(self.drone_no, False)
-            print("Done with {0} box".format(self.found_count))
+            if self.st_mt.pos.pose.position.z < 4:
+                self.pp.is_grab(self.drone_no,False)
+            print("Done with one box")
             self.found = 0
             print("Found_count: {0}".format(self.found_count))
+        # self.drop.append(self.lpos)
 
     def search(self):
         while self.find:
-            x1,y1,z1 = self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = self.st_mt.pos.pose.position.x + 2.0 , self.st_mt.pos.pose.position.y,2.0
+            x1,y1,z1 = self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = self.st_mt.pos.pose.position.x + 2.0 , self.st_mt.pos.pose.position.y, self.st_mt.pos.pose.position.z
             self.local_pos_pub.publish(self.epos)
             aruco_check = self.aruco.detect_ArUco(self.st_mt.img)
-            if aruco_check!=0: 
-                self.drop = self.drop_loc[0] if tuple(aruco_check.keys())[0] == 2 else self.drop_loc[1]
+            if aruco_check != 0: 
+                if tuple(aruco_check.keys())[0] == 2:
+                    self.drop = self.drop_loc[0]
+                else:
+                    self.drop = self.drop_loc[1]
                 y1,z1 = self.st_mt.pos.pose.position.y, self.st_mt.pos.pose.position.z
-                print("If Aruco Check != 0")
-                while not self.found: 
-                    ac = self.aruco.detect_ArUco(self.st_mt.img)
-                    if ac!=0:
-                        try:
-                            cx,cy = self.aruco.Calculate_orientation(ac)
-                        except:
-                            pass
-                        if(abs(cx - 200 )<= 5  and abs(cy - 200 )<= 5 ) :
+                print("Aruco Check")
+                while not self.found:
+                    # print("in self.found")
+                    try:    
+                        # print("Try !")
+                        cx,cy = self.aruco.Calculate_orientation(self.aruco.detect_ArUco(self.st_mt.img))
+                        print(cx,cy ,": center")
+                        if(abs(cx - 200 )<= 3  and abs(cy - 200 )<= 3 ) :
                             print("Ready to pick up ")
-                            z1 = self.epos.pose.position.z = - 0.25
+                            z1 = self.epos.pose.position.z = -0.1
                             y1= self.epos.pose.position.y = self.st_mt.pos.pose.position.y + 0.24
                             self.local_pos_pub.publish(self.epos)
-                            reached = False
-                            while not reached:
-                                if abs(y1 - self.st_mt.  pos.pose.position.y) < 0.25 and abs(z1 - self.st_mt.pos.pose.position.z) < 0.25 :
-                                    reached = True
-                                self.rate.sleep()
+                            print("landing coordinates",x1,y1,z1)
                             self.found = 1
                         elif(cx - 200 < -3.1 and abs(cx -200 ) <= 15) :
                             x1= self.epos.pose.position.x  = self.st_mt.pos.pose.position.x - 0.15
+                            print("decrese x 0.1 ")
                         elif(cx - 200 < -15.1 and abs(cx -200 ) <= 40) :
                             x1= self.epos.pose.position.x  = self.st_mt.pos.pose.position.x - 0.2
+                            print("decrese x 0.2 ")
                         elif(cx - 200 < -40.1 and abs(cx -200 ) <= 85) :
                             x1= self.epos.pose.position.x  = self.st_mt.pos.pose.position.x - 0.5
+                            print("decrese x 0.5 ")
                         elif(cx - 200 < -85.1 ) :
                             x1= self.epos.pose.position.x  = self.st_mt.pos.pose.position.x - 1
-                                                    
+                            print("decrese x 1 ")
+                        
                         elif(cx - 200 > 3 and abs(cx-200) <= 15) :
                             x1= self.epos.pose.position.x  = self.st_mt.pos.pose.position.x + 0.15
-                            
+                            print("increase ++ x 0.1")
                         elif(cx - 200 > 15.1 and abs(cx-200) <= 40) :
                             x1= self.epos.pose.position.x  = self.st_mt.pos.pose.position.x + 0.2
-                            
+                            print("increase ++ x 0.2")
                         elif(cx - 200 > 40.1 and abs(cx-200) <= 85) :
                             x1= self.epos.pose.position.x  = self.st_mt.pos.pose.position.x + 0.5
-                            
+                            print("increase ++ x 0.5")
                         elif(cx - 200 > 85) :
                             x1= self.epos.pose.position.x  = self.st_mt.pos.pose.position.x + 1
+                            print("increase ++ x 1")
+                        
                         # ------------------------------------------------------y coordinate -------------------------------------------------------------
                         elif(cy - 200 < -3.1 and abs(cy -200 ) <= 15) :
                             y1= self.epos.pose.position.y  = self.st_mt.pos.pose.position.y + 0.15
+                            print("decrese y 0.1 ")
                         elif(cy - 200 < -15.1 and abs(cy -200 ) <= 40) :
                             y1= self.epos.pose.position.y  = self.st_mt.pos.pose.position.y + 0.2
+                            print("decrese y 0.2 ")
                         elif(cy - 200 < -40.1 and abs(cy -200 ) <= 85) :
                             y1= self.epos.pose.position.y  = self.st_mt.pos.pose.position.y + 0.5
+                            print("decrese y 0.5 ")
                         elif(cy - 200 < -85.1 ) :
                             y1= self.epos.pose.position.y  = self.st_mt.pos.pose.position.y + 1
-                                                    
+                            print("decrese y 1 ")
+                        
                         elif(cy - 200 > 3 and abs(cy-200) <= 15) :
                             y1= self.epos.pose.position.y  = self.st_mt.pos.pose.position.y - 0.15
-                            
+                            print("increase ++ y 0.1")
                         elif(cy - 200 > 15.1 and abs(cy-200) <= 40) :
                             y1= self.epos.pose.position.y = self.st_mt.pos.pose.position.y - 0.2
-                            
+                            print("increase ++ x 0.2")
                         elif(cy - 200 > 40.1 and abs(cy-200) <= 85) :
                             y1= self.epos.pose.position.y  = self.st_mt.pos.pose.position.y - 0.5
-                            
+                            print("increase ++ y 0.5")
                         elif(cy - 200 > 85) :
-                            y1= self.epos.pose.position.y  = self.st_mt.pos.pose.position.y - 1    
-                        self.local_pos_pub.publish(self.epos)
-                        reached = False
-                        while not reached:
-                            if abs(x1 - self.st_mt.pos.pose.position.x) < 0.1 and abs(y1 - self.st_mt.pos.pose.position.y) < 0.1 and abs(z1 - self.st_mt.pos.pose.position.z) < 0.25 :
-                                reached = True
-                            self.rate.sleep()
-                    else:
-                        self.epos.pose.position.z = self.st_mt.pos.pose.position.z+1
-                        self.local_pos_pub.publish(self.epos)
-                print("While not self.found break")
+                            y1= self.epos.pose.position.y  = self.st_mt.pos.pose.position.y - 1
+                            print("increase ++ y 1")
+                    except:
+                        continue
+                    self.local_pos_pub.publish(self.epos)
+                    reached = False
+                    while not reached:
+                        if abs(x1 - self.st_mt.pos.pose.position.x) < 0.1 and abs(y1 - self.st_mt.pos.pose.position.y) < 0.1 and abs(z1 - self.st_mt.pos.pose.position.z) < 0.3 :
+                            reached = True
                 self.find = 0
-            else:
-                self.epos.pose.position.y = self.st_mt.pos.pose.position.y + 2.0
-                self.local_pos_pub.publish(self.epos)
 
-    def drone1(self):
+    def drone(self):
         self.setup()
         for row_no in range(1,10):
-            x ,y ,z=  0 ,row_no * 4 , self.alt 
-            self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
+            y = row_no * 4    
+            print(y)
+            self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (0.5,y,self.alt)
             self.local_pos_pub.publish(self.epos)
             self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
-            print(x,y,z)
-            self.find = 1
-            self.search()
-            self.pick_from_location()
-            self.drop_at_location()
-    
-    def drone2(self):
-        self.setup()
-        for row_no in range(1,10):
-            x ,y ,z= 6.86,row_no * 4 - 61.0, self.alt
-            self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
-            self.local_pos_pub.publish(self.epos)
-            self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
-            print(x,y,z)
+            print('reached')
             self.find = 1
             self.search()
             self.pick_from_location()
             self.drop_at_location()
     
 def main():
-    rospy.init_node('strawberry_stacker', anonymous = True)
+    rospy.init_node('multidrone', anonymous = True)
+
+    rospy.Subscriber('/spawn_info',UInt8, stateMoniter().rowCb)
 
     e1,e2 = ('edrone0','edrone1')
-    drop_loc1 = ([(16.31,-6.55,4.25),(16.31,-6.55,2.25),(16.31,-6.55,5.25),(0,0,5.25)],[(58.5,63.74,4.25),(58.5,63.75,2.25),(58.5,63.75,5.25), (0,0,5.25)])
-    drop_loc2 = ([(16.31,-66.55,4.25),(16.31,-66.55,2.25),(16.31,-66.55,5.25),(0,0,5.25)],[(58.5,3.74,4.25),(58.5,3.75,2.25),(58.5,3.75,5.25), (0,0,5.25)])
-    d1,d2 = Drone(e1,drop_loc1), Drone(e2,drop_loc2)
-    #Thread 1
-    t1 = Thread(target = d1.drone1)
-    t1.start()
-    #Thread 2
-    t2 = Thread(target = d2.drone2)
-    t2.start()
-    
-        
-
+    drop_loc = ([(16.31,-6.55,4.25),(16.31,-6.55,2.25),(16.31,-6.55,5.25),(0,0,5.25)],[(58.5,63.74,4.25),(58.5,63.75,2.25),(58.5,63.75,5.25), (0,0,5.25)])
+    d1,d2 = Drone(e1,drop_loc), Drone(e2,drop_loc)
+    t1 = Thread(target = d1.drone, args = [])
+    t1.start()    
+    # t2 = Thread(target = d2.drone).start()
+    # t2.join()
 
 if __name__ == '__main__':
-    print(__file__.split("/")[-1])
+    print(__file__)
     try:
         main()
-    except rospy.ROSInterruptException as ROI:
-        print(ROI)
+    except rospy.ROSInterruptException:
         pass
-
