@@ -232,8 +232,13 @@ class Drone(object):
                             z1 = self.epos.pose.position.z = -0.1
                             y1= self.epos.pose.position.y = self.st_mt.pos.pose.position.y + 0.24
                             self.local_pos_pub.publish(self.epos)
-                            print("landing coordinates",x1,y1,z1)
                             self.found = 1
+                            #_C1_#
+                            while not reached:
+                                if abs(y1 - self.st_mt.  pos.pose.position.y) < 0.2 and abs(z1 - self.st_mt.pos.pose.position.z) < 0.25 :
+                                    reached = True
+                                self.rate.sleep()
+                            print("landing coordinates",x1,y1,z1)
                         elif(cx - 200 < -3.1 and abs(cx -200 ) <= 15) :
                             x1= self.epos.pose.position.x  = self.st_mt.pos.pose.position.x - 0.15
                             print("decrese x 0.1 ")
@@ -290,11 +295,11 @@ class Drone(object):
                         continue
                     self.local_pos_pub.publish(self.epos)
                     reached = False
-                    while not reached:
-                        if abs(x1 - self.st_mt.pos.pose.position.x) < 0.1 and abs(y1 - self.st_mt.pos.pose.position.y) < 0.1 and abs(z1 - self.st_mt.pos.pose.position.z) < 0.3 :
-                            reached = True
+                    #_C2_#
+                    self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
                 self.find = 0
-
+            
+            
     def drone(self):
         self.setup()
         if self.drone_no == "edrone0":
@@ -349,7 +354,7 @@ def main():
     t2.join()
 
 if __name__ == '__main__':
-    print(__file__)
+    print(__file__.split("/")[-1])
     try:
         main()
     except rospy.ROSInterruptException:
