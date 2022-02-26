@@ -113,13 +113,7 @@ class Aruco:
 
 
 class strawberry_stacker:
-    
-    def grid_location(self):
-        cells = []
-
-    def box_count(self):
-        pass
-
+        
     def rowCb(self, msg):
         ''' Callback function for /spawn_info'''
         row_no = msg.data
