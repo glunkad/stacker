@@ -81,7 +81,7 @@ class stateMoniter:
         '''Callback function for /mavros/local_position/pose'''
         self.pos = msg
  
-    def gripperCb(self, msg):
+    def gripCb(self, msg):
         '''Callback function for /gripper_check'''
         self.grip = msg
  
@@ -149,12 +149,12 @@ class Drone(object):
         self.row_nos_lst = list()
     
     def __del__(self):
-        rospy.loginfo("Drone D!")
+        rospy.loginfo("Drone Del!")
 
     def setup(self):
         rospy.Subscriber(self.drone_no+'/mavros/state', State, self.st_mt.stateCb)
         rospy.Subscriber(self.drone_no+'/mavros/local_position/pose', PoseStamped, self.st_mt.posCb)
-        rospy.Subscriber(self.drone_no+'/gripper_check',String, self.st_mt.gripperCb)
+        rospy.Subscriber(self.drone_no+'/gripper_check',String, self.st_mt.gripCb)
         rospy.Subscriber(self.drone_no+'/camera/image_raw', Image, self.st_mt.imgCb)
         for i in xrange(100):
             self.local_pos_pub.publish(self.epos)
@@ -179,7 +179,6 @@ class Drone(object):
             rospy.loginfo("Reached : ",(px,py,pz))
 
     def pick_from_location(self):
-        self.prev_loc = (self.st_mt.pos.pose.position.x,self.st_mt.pos.pose.position.y,3.0)
         pick = False
         while not pick:
             rospy.loginfo(self.st_mt.grip.data)
@@ -190,7 +189,6 @@ class Drone(object):
                 rospy.loginfo("Grabbed!!!!!")
                 self.vel.linear.x,self.vel.linear.y,self.vel.linear.z = (10,10,3)
                 self.local_vel_pub.publish(self.vel)
-                self.drop[-1] = self.prev_loc
                 pick = True
             self.rate.sleep()
 
@@ -207,7 +205,6 @@ class Drone(object):
             rospy.loginfo("Done with one box")
             self.found = 0
             rospy.loginfo("Found_count by {0}: {1} ".format(self.drone_no,self.found_count))
-        # self.drop.append(self.lpos)
 
     def search(self):
         while self.find:
@@ -339,14 +336,11 @@ def main():
     global row_no,row_nos_lst
     row_no,row_nos_lst = UInt8(), []
 
-    global dlst 
-    dlst = []
-
     rospy.Subscriber('/spawn_info', UInt8, strawberry_stacker().rowCb)
 
     e1,e2 = ('edrone0','edrone1')
-    drop_loc1 = ([(16.31,-6.55,4.25),(16.31,-6.55,2.25),(16.31,-6.55,5.25),(0,0,5.25)],[(58.5,63.74,4.25),(58.5,63.75,2.25),(58.5,63.75,5.25), (0,0,5.25)])
-    drop_loc2 = ([(16.31,-66.55,4.25),(16.31,-66.55,2.25),(16.31,-66.55,5.25),(0,0,5.25)],[(58.5,3.74,4.25),(58.5,3.75,2.25),(58.5,3.75,5.25), (0,0,5.25)])
+    drop_loc1 = ([(16.31,-6.55,4.25),(16.31,-6.55,2.25),(16.31,-6.55,5.25)],[(58.5,63.74,4.25),(58.5,63.75,2.25),(58.5,63.75,5.25)])
+    drop_loc2 = ([(16.31,-66.55,4.25),(16.31,-66.55,2.25),(16.31,-66.55,5.25)],[(58.5,3.74,4.25),(58.5,3.75,2.25),(58.5,3.75,5.25)])
     d1,d2 = Drone(e1,drop_loc1), Drone(e2,drop_loc2)
     t1 = Thread(target = d1.drone)
     t1.start() 
