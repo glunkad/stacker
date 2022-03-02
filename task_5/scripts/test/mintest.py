@@ -2,7 +2,7 @@
 import rospy,cv2
 import cv2.aruco as aruco
 from geometry_msgs.msg import PoseStamped, Twist
-from mavros_msgs.msg import ParamValue, State
+from mavros_msgs.msg import ParamValue, State 
 from mavros_msgs.srv import CommandBool, SetMode , CommandTOL
 from six.moves import xrange
 from std_msgs.msg import String, UInt8
@@ -71,7 +71,6 @@ class stateMoniter:
         self.grip = String()
         self.img = np.empty([])
         self.bridge = CvBridge()
-        self.row_no = int()
  
     def stateCb(self, msg):
         '''Callback function for /mavros/state'''
@@ -100,7 +99,7 @@ class Aruco:
         aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_250)
         parameters = aruco.DetectorParameters_create()
         corners, ids, _ = aruco.detectMarkers(gray, aruco_dict, parameters = parameters)
-        Detected_ArUco_markers = dict(zip(ids[:,0], corners)) and ids 
+        Detected_ArUco_markers = dict(zip(ids[:,0], corners)) if ids != None else 0 
         return Detected_ArUco_markers
  
     def Calculate_orientation(self,Detected_ArUco_markers):
@@ -118,6 +117,7 @@ class strawberry_stacker:
         ''' Callback function for /spawn_info'''
         row_no = msg.data
         row_nos_lst.append(row_no)
+        print(row_nos_lst)
         row_nos_lst.sort()
 
 
@@ -141,9 +141,10 @@ class Drone(object):
         self.found_count = 0
         self.prev_loc = (0,0,0)
         self.row_nos_lst = list()
+       
     
     def __del__(self):
-        rospy.loginfo("Drone Del!")
+        rospy.loginfo("Death of"+self.drone_no)
 
     def setup(self):
         rospy.Subscriber(self.drone_no+'/mavros/state', State, self.st_mt.stateCb)
@@ -192,10 +193,15 @@ class Drone(object):
             self.vel.linear.x,self.vel.linear.y,self.vel.linear.z = (10,10,1)
             self.local_vel_pub.publish(self.vel)
             self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = setpoint
-            self.local_pos_pub.publish(self.epos)    
+            self.local_pos_pub.publish(self.epos)  
+     # self.grid=self.grid+0.8
             self.reach_point(setpoint[0],setpoint[1],setpoint[2])
             if self.st_mt.pos.pose.position.z < 4:
-                self.pp.pick(self.drone_no,False)
+                temp5=True
+                while(temp5) :
+                    self.pp.pick(self.drone_no,False)
+                    temp5=False
+                # self.pp.pick(self.drone_no,False)
             rospy.loginfo("Done with one box")
             self.found = 0
             rospy.loginfo("Found_count by {0}: {1} ".format(self.drone_no,self.found_count))
@@ -213,14 +219,15 @@ class Drone(object):
                 y1,z1 = self.st_mt.pos.pose.position.y, self.st_mt.pos.pose.position.z
                 rospy.loginfo("Aruco Check")
                 while not self.found:
-                    # rospy.loginfo("in self.found")
+                    rospy.loginfo("in self.found")
                     try:    
-                        # rospy.loginfo("Try !")
+                        rospy.loginfo("Try !")
                         cx,cy = self.aruco.Calculate_orientation(self.aruco.detect_ArUco(self.st_mt.img))
-                        rospy.loginfo(cx,cy ,": center")
+                        rospy.loginfo(": center")
                         if(abs(cx - 200 )<= 3  and abs(cy - 200 )<= 3 ) :
                             rospy.loginfo("Ready to pick up ")
-                            z1 = self.epos.pose.position.z = 0.13
+                            # z1 = self.epos.pose.position.z = 0.1
+                            z1 = self.epos.pose.position.z = 0.1
                             y1= self.epos.pose.position.y = self.st_mt.pos.pose.position.y + 0.24
                             self.local_pos_pub.publish(self.epos)
                             self.found = 1
@@ -282,15 +289,18 @@ class Drone(object):
                             y1= self.epos.pose.position.y  = self.st_mt.pos.pose.position.y - 1
                             rospy.loginfo("increase ++ y 1")
                     except:
+                        # rospy.loginfo("Continue!!")
                         continue
                     self.local_pos_pub.publish(self.epos)
                     reached = False
                     self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
                 self.find = 0
-            
-            
-    def drone(self):
+
+    def set_setup(self):
         self.setup()
+
+    def drone(self):
+        # self.setup()
         if self.drone_no == "edrone0":
             for row_no in row_nos_lst:
                 rospy.loginfo(self.row_nos_lst)
@@ -301,7 +311,7 @@ class Drone(object):
                     self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
                     self.local_pos_pub.publish(self.epos)
                     self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
-                    rospy.loginfo(x,y,z)
+                    # rospy.loginfo(x,y,z)
                     self.find = 1
                     self.search()
                     self.pick_from_location()
@@ -310,18 +320,18 @@ class Drone(object):
             for row_no in row_nos_lst:
                 row_nos_lst.pop(self.found_count)
                 rospy.loginfo("row list {0} : {1}".format(self.row_nos_lst,self.drone_no))
-                rospy.loginfo(self.drone_no,"+",row_no)
                 if row_no % 2 != 0 and row_no != 0:
                     x ,y ,z = 1 ,row_no * 4  - 60.0, self.alt+0.75
                     self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
                     self.local_pos_pub.publish(self.epos)
                     self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
-                    rospy.loginfo(x,y,z)
+                    # rospy.loginfo(x,y,z)
                     self.find = 1
                     self.search()
                     self.pick_from_location()
                     self.drop_at_location()
         else:
+            
             self.rate.sleep()
     
 def main():
@@ -336,6 +346,8 @@ def main():
     drop_loc1 = ([(16.31,-6.55,4.25),(16.31,-6.55,2.25),(16.31,-6.55,5.25)],[(58.5,63.74,4.25),(58.5,63.75,2.25),(58.5,63.75,5.25)])
     drop_loc2 = ([(16.31,-66.55,4.25),(16.31,-66.55,2.25),(16.31,-66.55,5.25)],[(58.5,3.74,4.25),(58.5,3.75,2.25),(58.5,3.75,5.25)])
     d1,d2 = Drone(e1,drop_loc1), Drone(e2,drop_loc2)
+    d1.set_setup()
+    d2.set_setup()
     t1 = Thread(target = d1.drone)
     t1.start() 
     t2 = Thread(target = d2.drone)
@@ -347,4 +359,3 @@ if __name__ == '__main__':
         main()
     except rospy.ROSInterruptException:
         pass
-
