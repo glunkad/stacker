@@ -41,7 +41,6 @@ class pick_n_place:
         except rospy.ServiceException as e:
             rospy.loginfo("Offboard set mode failedfor {0}: {1}".format(drone_no,e))
  
- 
     def pick(self, drone_no,action):
         '''Call /activate_gripper to pick the box'''
         self.service = drone_no+'/activate_gripper'
@@ -117,9 +116,7 @@ class strawberry_stacker:
         ''' Callback function for /spawn_info'''
         row_no = msg.data
         row_nos_lst.append(row_no)
-        print(row_nos_lst)
-        row_nos_lst.sort()
-
+        # it = iter(row_nos_lst)
 
 class Drone(object):
     """docstring for Drone"""
@@ -140,8 +137,7 @@ class Drone(object):
         self.found = 0
         self.found_count = 0
         self.prev_loc = (0,0,0)
-        self.row_nos_lst = list()
-       
+        
     
     def __del__(self):
         rospy.loginfo("Death of"+self.drone_no)
@@ -194,14 +190,11 @@ class Drone(object):
             self.local_vel_pub.publish(self.vel)
             self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = setpoint
             self.local_pos_pub.publish(self.epos)  
-     # self.grid=self.grid+0.8
             self.reach_point(setpoint[0],setpoint[1],setpoint[2])
             if self.st_mt.pos.pose.position.z < 4:
                 temp5=True
-                while(temp5) :
+                while self.st_mt.grip.data:
                     self.pp.pick(self.drone_no,False)
-                    temp5=False
-                # self.pp.pick(self.drone_no,False)
             rospy.loginfo("Done with one box")
             self.found = 0
             rospy.loginfo("Found_count by {0}: {1} ".format(self.drone_no,self.found_count))
@@ -227,7 +220,7 @@ class Drone(object):
                         if(abs(cx - 200 )<= 3  and abs(cy - 200 )<= 3 ) :
                             rospy.loginfo("Ready to pick up ")
                             # z1 = self.epos.pose.position.z = 0.1
-                            z1 = self.epos.pose.position.z = 0.1
+                            z1 = self.epos.pose.position.z = 0.07
                             y1= self.epos.pose.position.y = self.st_mt.pos.pose.position.y + 0.24
                             self.local_pos_pub.publish(self.epos)
                             self.found = 1
@@ -300,38 +293,44 @@ class Drone(object):
         self.setup()
 
     def drone(self):
-        # self.setup()
         if self.drone_no == "edrone0":
-            for row_no in row_nos_lst:
-                rospy.loginfo(self.row_nos_lst)
-                row_nos_lst.pop(self.found_count)
-                rospy.loginfo("row list {0} : {1}".format(self.row_nos_lst,self.drone_no))
-                if row_no % 2 == 0 and row_no != 0:
-                    x ,y ,z =  0.5 ,row_no * 4 , self.alt 
-                    self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
-                    self.local_pos_pub.publish(self.epos)
-                    self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
-                    # rospy.loginfo(x,y,z)
-                    self.find = 1
-                    self.search()
-                    self.pick_from_location()
-                    self.drop_at_location()
+            # self.rate.sleep()
+            for i in range(10):
+                rospy.loginfo("row list {0} : {1}".format(self.drone_no,'a'))
+                x ,y ,z =  1 ,next(iter(row_nos_lst))*4 , self.alt 
+                self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
+                self.local_pos_pub.publish(self.epos)
+                self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
+                self.find = 1
+                self.search()
+                self.pick_from_location()
+                self.drop_at_location() 
         elif self.drone_no == "edrone1":
-            for row_no in row_nos_lst:
-                row_nos_lst.pop(self.found_count)
-                rospy.loginfo("row list {0} : {1}".format(self.row_nos_lst,self.drone_no))
-                if row_no % 2 != 0 and row_no != 0:
-                    x ,y ,z = 1 ,row_no * 4  - 60.0, self.alt+0.75
+            self.rate.sleep()
+            cnt = 0
+            for i in range(10):
+                rospy.loginfo("row list {0} : {1}".format('b',self.drone_no))
+                if cnt == 0:
+                    x ,y ,z = 1 ,next(iter(row_nos_lst)) * 4  - 70.0, self.alt+0.57
                     self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
+                    cnt += 1
                     self.local_pos_pub.publish(self.epos)
                     self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
-                    # rospy.loginfo(x,y,z)
                     self.find = 1
                     self.search()
                     self.pick_from_location()
                     self.drop_at_location()
+                else:
+                    x ,y ,z = 1 ,next(iter(row_nos_lst)) * 4  - 61.0, self.alt+0.57
+                    self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
+                    self.local_pos_pub.publish(self.epos)
+                    self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
+                    self.find = 1
+                    self.search()
+                    self.pick_from_location()
+                    self.drop_at_location()
+
         else:
-            
             self.rate.sleep()
     
 def main():
@@ -339,6 +338,7 @@ def main():
     
     global row_no,row_nos_lst
     row_no,row_nos_lst = UInt8(), []
+    # it = iter(row_nos_lst)
 
     rospy.Subscriber('/spawn_info', UInt8, strawberry_stacker().rowCb)
 
