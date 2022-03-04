@@ -1,3 +1,14 @@
+'''
+# Team ID:          1879
+# Theme:            Strawberry Stacker
+# Author List:      Purushotam kumar Agrawal, Mehul Singhal, Anurag Gupta, Abhishek Pathak
+# Filename:         SS_1879_strawberry_stacker.py
+# Functions:        class Edrone(), gripper_active(state), is_at_setpoint3D(setpoint), is_at_setpoint2D(setpoint), stablize_drone(time_limit, position, speed)
+                    stablize_drone(time_limit, position, speed), avoid_obstacle(position, speed), avoid_obstacle_new(position, speed), reach_short_destination(height_correction, position, speed, marker_detect)
+                    reach_destination(height_correction, hc, position, speed, delivery), nearest(src), farthest(), make_box_position(), determine_order()
+                    hover(), marker_detection(), generate_csv(), main()
+# Global variables: row_no,row_nos_list
+'''
 #!/usr/bin/env python3
 import rospy,cv2
 import cv2.aruco as aruco
@@ -115,8 +126,8 @@ class strawberry_stacker:
     def rowCb(self, msg):
         ''' Callback function for /spawn_info'''
         row_no = msg.data
-        row_nos_lst.append(row_no)
-        # it = iter(row_nos_lst)
+        row_nos_list.append(row_no)
+        # it = iter(row_nos_list)
 
 class Drone(object):
     """docstring for Drone"""
@@ -192,7 +203,6 @@ class Drone(object):
             self.local_pos_pub.publish(self.epos)  
             self.reach_point(setpoint[0],setpoint[1],setpoint[2])
             if self.st_mt.pos.pose.position.z < 4:
-                temp5=True
                 while self.st_mt.grip.data:
                     self.pp.pick(self.drone_no,False)
             rospy.loginfo("Done with one box")
@@ -297,7 +307,7 @@ class Drone(object):
             # self.rate.sleep()
             for i in range(10):
                 rospy.loginfo("row list {0} : {1}".format(self.drone_no,'a'))
-                x ,y ,z =  1 ,next(iter(row_nos_lst))*4 , self.alt 
+                x ,y ,z =  1 ,next(iter(row_nos_list))*4 -1, self.alt 
                 self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
                 self.local_pos_pub.publish(self.epos)
                 self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
@@ -309,9 +319,9 @@ class Drone(object):
             self.rate.sleep()
             cnt = 0
             for i in range(10):
-                rospy.loginfo("row list {0} : {1}".format('b',self.drone_no))
+                rospy.loginfo("row list {0} : {1}".format(self.drone_no,row_nos_list))
                 if cnt == 0:
-                    x ,y ,z = 1 ,next(iter(row_nos_lst)) * 4  - 70.0, self.alt+0.57
+                    x ,y ,z = 1 ,next(iter(row_nos_list)) * 4  - 70.0, self.alt+0.57
                     self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
                     cnt += 1
                     self.local_pos_pub.publish(self.epos)
@@ -321,7 +331,7 @@ class Drone(object):
                     self.pick_from_location()
                     self.drop_at_location()
                 else:
-                    x ,y ,z = 1 ,next(iter(row_nos_lst)) * 4  - 61.0, self.alt+0.57
+                    x ,y ,z = 1 ,next(iter(row_nos_list)) * 4  - 61.0, self.alt+0.57
                     self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z = (x,y,z)
                     self.local_pos_pub.publish(self.epos)
                     self.reach_point(self.epos.pose.position.x,self.epos.pose.position.y,self.epos.pose.position.z)
@@ -336,9 +346,8 @@ class Drone(object):
 def main():
     rospy.init_node('multidrone', anonymous = True)
     
-    global row_no,row_nos_lst
-    row_no,row_nos_lst = UInt8(), []
-    # it = iter(row_nos_lst)
+    global row_no,row_nos_list
+    row_no,row_nos_list = UInt8(), []
 
     rospy.Subscriber('/spawn_info', UInt8, strawberry_stacker().rowCb)
 
